@@ -1,0 +1,5 @@
+local filter = require "make4ht-filter"
+
+local my_filter = filter{"cleanspan", "fixligatures"}
+Make:htlatex()
+Make:match("html$",my_filter)

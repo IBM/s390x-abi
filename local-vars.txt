@@ -1,0 +1,7 @@
+
+-------------------------------------------------------------------------------
+* Local Variables:
+* fill-column: 80
+* indent-tabs-mode: nil
+* buffer-read-only: t
+* End:
