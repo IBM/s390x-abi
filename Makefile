@@ -69,6 +69,29 @@ $(MAIN)_%.txt: %-html/index.html
 	| sed 's/━/-/g; s/  *$$//' | cat - local-vars.txt > $@ \
 	|| rm -f $@
 
+# Different revisions of the main document
+# Source must be in "revs/", such as "revs/lzsabi-1.5.tex".
+
+s390x-%-html/$(MAIN).tex s390-%-html/$(MAIN).tex \
+s390x-%-pdf/$(MAIN).tex s390-%-pdf/$(MAIN).tex: \
+  revs/$(MAIN)-%.tex $(INPUTS:=.tex)
+	mkdir -p $(dir $@) && cd $(dir $@) && \
+	ln -sf $(OTHERS:%=../%.tex) . && \
+	ln -sf ../revs/$(MAIN)-$*.tex $(MAIN).tex
+
+# Diff output
+# These rules enable targets like 'lzsabi_s390x-vs-1.5.pdf'.
+
+s390x-vs-%-html/$(MAIN).tex s390-vs-%-html/$(MAIN).tex \
+s390x-vs-%-pdf/$(MAIN).tex s390-vs-%-pdf/$(MAIN).tex: \
+  revs/$(MAIN)-%.tex $(INPUTS:=.tex)
+	mkdir -p $(dir $@) && cd $(dir $@) && \
+	ln -sf $(OTHERS:%=../%.tex) .
+	$(LATEXDIFF) revs/$(MAIN)-$*.tex $(MAIN).tex > $@
+
+$(MAIN)_s390x-%.patch: $(MAIN)_s390x-%.txt $(MAIN)_s390x.txt
+	diff -ud $(MAIN)_s390x-$*.txt $(MAIN)_s390x.txt > $@ || true
+
 # Other targets
 
 $(MAIN).tar.gz : $(MAIN).tex $(INPUTS:=.tex)  $(MAIN).mk4 \

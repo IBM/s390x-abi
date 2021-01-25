@@ -15,7 +15,7 @@
 
 % --- Version ---
 
-\newcommand{\Version}{1.5}
+\newcommand{\Version}{1.x}
 
 % --- Packages ---
 
@@ -312,7 +312,8 @@ breaklinks=true,pdfborder={0 0 0},backref=false,colorlinks=true]
 \title{\myTitle}
 \subtitle{Version \Version}
 
-\author{Martin Schwidefsky\and Ulrich Weigand\and Andreas Arnez}
+\author{Martin Schwidefsky\and Ulrich Weigand\and Andreas Arnez%
+  \and Andreas Krebbel}
 \publishers{IBM\textregistered{} Corporation}
 
 \lowertitleback{%
@@ -353,6 +354,8 @@ Interface'' and should be read in conjunction with it.
 \section*{History}
 
 \begin{description}
+\item[1.x] Add information about vector types and registers, based on
+  input from Andreas Krebbel.
 \item[1.5] \emph{``ELF Application Binary Interface
     \ABINAME{}~Supplement''} -- Conversion to \LaTeX{}; various
   corrections to revision~1.02.  Edited by Andreas Arnez.  Published at
@@ -1226,6 +1229,25 @@ struct {       | 0         7 | 8                                    31 |
   \label{fig:unnbitf}
 \end{figure}
 
+\subsubsection{Vector Types}
+\index{vector type}
+Vector types are used for SIMD\index{SIMD} (single-instruction,
+multiple-data) programming.  They are not part of the C language, but
+defined by a language extension, such as the ``vector extensions''
+described in the respective section in the GCC manual~\cite{gnu-vec}.
+
+A vector\index{vector} holds multiple values (``elements'') of a given
+base type (``element type'').  Valid element types include the scalar
+types shown in \cref{tab:scalar}, except for pointer types and the Boolean
+type \texttt{\_Bool}.  The number of elements in a vector must be a power
+of two.  Each allowed combination of base type and number of elements
+forms a distinct vector type.  A single-element vector type is not
+compatible with its base type.
+
+The size of a vector type is the size of the base type multiplied by the
+number of elements.  Vectors with a size of 1, 2, 4, or $\ge 8$ bytes are
+aligned to a 1-, 2-, 4-, or 8-byte boundary, respectively.
+
 \section{Function-Calling Sequence}
 \index{function call}
 This section discusses the standard function-calling sequence,
@@ -1242,6 +1264,12 @@ The ABI makes the assumption that the processor has 16 general registers,
   older machines Linux emulates 16 IEEE registers within the kernel.  The
   width of the general registers is 32 bits, and the width of the
   floating-point registers is 64 bits.\fi}%
+
+\index{vector registers}
+Optionally, \ARCH{} processors may have a vector facility installed, which
+extends the 64-bit floating-point registers to 128-bit vector registers,
+\texttt{v0} through \texttt{v15}, and provides 16 additional 128-bit
+vector registers, \texttt{v16} through \texttt{v31}.
 
 \begin{table}
   \centering
@@ -1267,12 +1295,22 @@ The ABI makes the assumption that the processor has 16 general registers,
       \texttt{f2}, \texttt{f4}, \texttt{f6} & Arguments & Volatile \\
       \texttt{f1}, \texttt{f3}, \texttt{f5}, \texttt{f7} & -- & Volatile \\
       \texttt{f8}…\texttt{f15} & -- & Saved \\
+      \texttt{v0}…\texttt{v7} & (Extend \texttt{f0}…\texttt{f7}) & Volatile \\
+      \texttt{v8}…\texttt{v15} & (Extend \texttt{f8}…\texttt{f15}) &
+      Volatile\tnote{\dagger\dagger} \\
       \else %---------------------------------------------
       \texttt{f2} & Argument & Volatile \\
       \texttt{f4}, \texttt{f6} & -- & Saved \\
       \texttt{f1}, \texttt{f3}, \texttt{f5}, \texttt{f7}…\texttt{f15} &
       -- & Volatile \\
+      \texttt{v0}…\texttt{v3}, \texttt{v5}, \texttt{v7}…\texttt{v15} &
+      (Extend respective FP registers) & Volatile \\
+      \texttt{v4}, \texttt{v6} & (Extend \texttt{f4}, \texttt{f6}) &
+      Volatile\tnote{\dagger\dagger} \\
       \fi %-----------------------------------------------
+      \texttt{v16}…\texttt{v23} & -- & Volatile \\
+      \texttt{v24} & Argument / return value & Volatile \\
+      \texttt{v25}…\texttt{v31} & Arguments & Volatile \\
       Access register{\ifzseries s\fi} 0{\ifzseries , 1\fi} &
       Reserved for system use & Reserved \\
       Access registers {\ifzseries 2\else 1\fi}…15 & -- & Volatile \\
@@ -1286,6 +1324,9 @@ The ABI makes the assumption that the processor has 16 general registers,
       calls.
     \item Reserved: These registers must not be modified by
       ABI-compliant functions.
+    \item [\dagger\dagger] Except for bytes 0--7, which are aliased to
+      {\ifzseries \texttt{f8}…\texttt{f15}\else \texttt{f4},
+        \texttt{f6}\fi}.
     \end{tablenotes}
   \end{threeparttable}
   \end{DIFnomarkup}
@@ -1312,6 +1353,11 @@ Using these definitions, the registers are categorized as follows:
     and \texttt{f6}\fi} are nonvolatile.
 \item Access register{\ifzseries s\fi} \texttt{a0} {\ifzseries and
     \texttt{a1} are\else is\fi} reserved.
+\item The left halves of vector registers {\ifzseries \texttt{v8} through
+    \texttt{v15}\else \texttt{v4} and \texttt{v6}\fi} are nonvolatile,
+  since they are aliased to {\ifzseries \texttt{f8} through
+    \texttt{f15}\else \texttt{f4} and \texttt{f6}\fi}.  The right halves
+  are volatile.
 \item All other registers are volatile.
 \item Furthermore the values in registers \texttt{r0} and \texttt{r1}
   may be altered by the interface code in cross-module calls, so a
@@ -1596,6 +1642,7 @@ passing:\index{registers!parameter passing}
 \item Floating-point registers {\ifzseries\texttt{f0}, \texttt{f2},
     \texttt{f4} and \texttt{f6}\else \texttt{f0} and \texttt{f2}\fi}
   (volatile)
+\item Vector registers \texttt{v24} to \texttt{v31} (volatile)
 \end{itemize}
 
 If needed, more arguments are passed in the parameter area, which starts
@@ -1677,9 +1724,10 @@ argument word.
 \begin{description}
 \item[\jumplabel{initialize}:] Allocate a sufficiently large parameter
   area for the arguments that will be passed according to the
-  \jumplabel{more} description that follows.  Set $\mbox{\texttt{fr}}=0$,
-  $\mbox{\texttt{gr}}=2$, and \texttt{starg} to the address of the parameter
-  area.
+  \jumplabel{more} and \jumplabel{more\_vec} descriptions that follow.
+  Set $\mbox{\texttt{fr}}=0$, $\mbox{\texttt{gr}}=2$,
+  $\mbox{\texttt{vr}}=24$, and \texttt{starg} to the address of the
+  parameter area.
 \item[\jumplabel{return\_parameter}:] If the called function's return
   value is not passed in a register (according to \cref{retvalues}), then
   allocate a return value buffer, store its address in \texttt{r2}, and
@@ -1703,6 +1751,20 @@ argument word.
     \jumplabel{more}.  Otherwise, load the argument value into
     floating-point register \texttt{fr}, set \texttt{fr} to
     $\mbox{\texttt{fr}}+2$, and go to \jumplabel{scan}.
+  \item[\jumplabel{vector\_arg}:] A vector\_arg has one of the following
+    types:
+    \begin{itemize}
+    \item Any vector type whose size is 16 bytes or less.
+    \item A structure equivalent to such a vector type, where
+      ``equivalent'' has the same meaning as for double\_or\_float.
+    \end{itemize}
+    If the argument is part of the varying arguments (see \cref{varargs}),
+    or if $\mbox{\texttt{vr}}=\mbox{\emph{nil}}$, go to
+    \jumplabel{more\_vec}.  Otherwise, load the value left-justified into
+    vector register \texttt{vr}, set \texttt{vr} to the next entry in the
+    list
+    \[ 24, 26, 28, 30, 25, 27, 29, 31, \mbox{\emph{nil}} \]
+    and go to \jumplabel{scan}.
     \ifzseries\else
   \item[\jumplabel{double\_arg}:] A double\_arg is one of type
     \texttt{long long}, or is a struct or a union of size 8 bytes which is
@@ -1730,11 +1792,12 @@ argument word.
       to \NBYTES{} bytes by adding padding bytes with unspecified contents
       on the left.
     \item A struct or union of any other size, a complex type, an
-      \texttt{\_\_int128}, a \texttt{long} \texttt{double}, or a
-      \texttt{\_Decimal128}.  Replace such an argument by a pointer to the
-      object, or to a copy where necessary to enforce call-by-value
-      semantics.  Only if the caller can ascertain that the object is
-      ``constant'' can it pass a pointer to the object itself.
+      \texttt{\_\_int128}, a \texttt{long} \texttt{double}, a
+      \texttt{\_Decimal128}, or a vector whose size exceeds 16 bytes.
+      Replace such an argument by a pointer to the object, or to a copy
+      where necessary to enforce call-by-value semantics.  Only if the
+      caller can ascertain that the object is ``constant'' can it pass a
+      pointer to the object itself.
     \end{itemize}
     If $\mbox{\texttt{gr}}>6$, go to \jumplabel{more}.  Otherwise load the
     argument value (now \NBITS{} bits wide) into general register
@@ -1754,6 +1817,11 @@ argument word.
     the skipped bytes (if any) at unspecified values.\else to the current
     stack position \texttt{starg}.\fi} Increment \texttt{starg} by
   {\ifzseries 8\else the argument size\fi}, then go to \jumplabel{scan}.
+\item[\jumplabel{more\_vec}:] The argument cannot be passed in vector
+  registers, but will be passed in the parameter area.  Copy its value to
+  the current stack position \texttt{starg}, increment \texttt{starg} by
+  the argument size, align \texttt{starg} to the next \NBYTES{}-byte
+  boundary, and go to \jumplabel{scan}.
 \end{description}
 
 As an example, assume the declarations and the function call shown in
@@ -1765,38 +1833,43 @@ storage would be as shown in \cref{tab:prmpass}.
 
 \begin{table}
   \centering
-  \begin{DIFnomarkup}
   \begin{lstlisting}[style=embed, label=lst:prmpass,
     caption={Parameter-passing example}]
+typedef float __attribute__((vector_size(8)) v2f_t;
+
 int i, j, k, l;
 long long ll;
 double f, g, h;
+v2f_t v1, v2;
 int m;
-x = func(i, j, g, k, l, ll, f, h, m);
+x = func(i, j, g, k, l, ll, f, h, m, v1, v2);
   \end{lstlisting}
+  \begin{DIFnomarkup}
   \par\medskip
-  \newdimen\mycolwidth\mycolwidth=.3\hsize
+  \newdimen\mycolwidth\mycolwidth=.22\hsize
   \begin{tabular}[t]{%
+      >{\texttt\bgroup}l<{\egroup :~}>{\texttt\bgroup}l<{\egroup}
       >{\texttt\bgroup}l<{\egroup :~}>{\texttt\bgroup}l<{\egroup}
       >{\texttt\bgroup}l<{\egroup :~}>{\texttt\bgroup}l<{\egroup}
       r<{:~}>{\texttt\bgroup}l<{\egroup}}
     \toprule
     \multicolumn{2}{>{\raggedright}p{\mycolwidth}}{General registers} &
     \multicolumn{2}{>{\raggedright}p{\mycolwidth}}{Floating-point registers} &
+    \multicolumn{2}{>{\raggedright}p{\mycolwidth}}{Vector registers} &
     \multicolumn{2}{>{\raggedright}p{\mycolwidth}}{Stack frame offset} \\
     \midrule
     \ifzseries
-    r2 & i  & f0    & g & 160   & m  \\
-    r3 & j  & f2    & f & \omit &    \\
-    r4 & k  & f4    & h & \omit &    \\
-    r5 & l  & \omit &   & \omit &    \\
-    r6 & ll & \omit &   & \omit &    \\
+    r2 & i  & f0    & g & v24   & v1 & 160   & m  \\
+    r3 & j  & f2    & f & v26   & v2 & \omit &    \\
+    r4 & k  & f4    & h & \omit &    & \omit &    \\
+    r5 & l  & \omit &   & \omit &    & \omit &    \\
+    r6 & ll & \omit &   & \omit &    & \omit &    \\
     \else
-    r2 & i  & f0    & g & 96    & ll \\
-    r3 & j  & f2    & f & 104   & h  \\
-    r4 & k  & \omit &   & 112   & m  \\
-    r5 & l  & \omit &   & \omit &    \\
-    r6 & -- & \omit &   & \omit &    \\
+    r2 & i  & f0    & g & v24   & v1 & 96    & ll \\
+    r3 & j  & f2    & f & v26   & v2 & 104   & h  \\
+    r4 & k  & \omit &   & \omit &    & 112   & m  \\
+    r5 & l  & \omit &   & \omit &    & \omit &    \\
+    r6 & -- & \omit &   & \omit &    & \omit &    \\
     \fi
     \bottomrule
   \end{tabular}
@@ -1806,12 +1879,15 @@ x = func(i, j, g, k, l, ll, f, h, m);
 \end{table}
 
 \subsection{Variable Argument Lists}
+\label{varargs}
 \index{variable argument list}
 If a C function declaration has a parameter type list that terminates with
 an ellipsis ``\texttt{...}\,,'' a call to that function can have varying
-numbers and types of arguments corresponding to the ellipsis.  These
-varying arguments are passed to the called function as if the ellipsis
-were replaced with a parameter type list of the actual arguments.
+numbers and types of arguments corresponding to the ellipsis.  Except for
+vector arguments of 16 bytes or less, these varying arguments are passed
+to the called function as if the ellipsis were replaced with a parameter
+type list of the actual arguments.  Varying vector arguments are always
+passed in the parameter area.
 
 \begin{lstlisting}[style=float,caption={\texttt{va\_list}
     declaration example},label={lst:valist}]
@@ -1866,9 +1942,9 @@ use this macro for copying a \texttt{va\_list} variable.
 \index{registers!return value passing}
 A function must pass its return value either in general register
 \texttt{r2},{\ifzseries\else{} in the register pair
-  \texttt{r2}/\texttt{r3},\fi} in floating-point register \texttt{f0}, or
-in a return value buffer allocated by the caller, depending on the return
-value type:
+  \texttt{r2}/\texttt{r3},\fi} in floating-point register \texttt{f0}, in
+vector register \texttt{v24}, or in a return value buffer allocated by the
+caller, depending on the return value type:
 
 \begin{itemize}
 \item A value of type \texttt{double} or \texttt{\_Decimal64} is returned
@@ -1885,11 +1961,13 @@ value type:
 \item A value of type \texttt{long} \texttt{long} or \texttt{unsigned}
   \texttt{long} \texttt{long} is returned with the lower addressed half in
   \texttt{r2} and the higher in \texttt{r3}.\fi
+\item A vector of 16 or fewer bytes is returned left-aligned in
+  \texttt{v24}.  The padding bits' values are unspecified.
 \item Any other type, such as \texttt{long} \texttt{double},
   \texttt{\_Decimal128}, \texttt{\_\_int128}, a complex type, a structure,
-  or a union, is returned in a return value buffer allocated by the
-  caller.  This buffer's address is treated like a ``hidden argument'' and
-  passed by the caller in \texttt{r2}.
+  a union, or a vector larger than 16 bytes, is returned in a return value
+  buffer allocated by the caller.  This buffer's address is treated like a
+  ``hidden argument'' and passed by the caller in \texttt{r2}.
 \end{itemize}
 
 \section{Operating System Interface}
@@ -2284,32 +2362,33 @@ member, as shown in \cref{tab:auxtypes}.
 \begin{table}
   \centering
   \begin{DIFnomarkup}
-  \begin{tabular}{lrl}
+  \begin{tabular}{lrl!{\qquad}lrl}
     \toprule
-    Name & Value & \texttt{a\_un} \\
+    Name & Value & \texttt{a\_un}
+    & Name & Value & \texttt{a\_un} \\
     \midrule
-    \texttt{AT\_NULL} & 0 & ignored \\
-    \texttt{AT\_IGNORE} & 1 & ignored \\
-    \texttt{AT\_EXECFD} & 2 & \texttt{a\_val} \\
-    \texttt{AT\_PHDR} & 3 & \texttt{a\_ptr} \\
-    \texttt{AT\_PHENT} & 4 & \texttt{a\_val} \\
-    \texttt{AT\_PHNUM} & 5 & \texttt{a\_val} \\
-    \texttt{AT\_PAGESZ} & 6 & \texttt{a\_val} \\
-    \texttt{AT\_BASE} & 7 & \texttt{a\_ptr} \\
-    \texttt{AT\_FLAGS} & 8 & \texttt{a\_val} \\
-    \texttt{AT\_ENTRY} & 9 & \texttt{a\_ptr} \\
-    \texttt{AT\_NOTELF} & 10 & \texttt{a\_val} \\
-    \texttt{AT\_UID} & 11 & \texttt{a\_val} \\
-    \texttt{AT\_EUID} & 12 & \texttt{a\_val} \\
-    \texttt{AT\_GID} & 13 & \texttt{a\_val} \\
-    \texttt{AT\_EGID} & 14 & \texttt{a\_val} \\
-    \texttt{AT\_PLATFORM} & 15 & \texttt{a\_ptr} \\
-    \texttt{AT\_HWCAP} & 16 & \texttt{a\_val} \\
-    \texttt{AT\_CLKTCK} & 17 & \texttt{a\_val} \\
-    \texttt{AT\_SECURE} & 23 & \texttt{a\_val} \\
-    \texttt{AT\_RANDOM} & 25 & \texttt{a\_ptr} \\
-    \texttt{AT\_EXECFN} & 31 & \texttt{a\_ptr} \\
-    \texttt{AT\_SYSINFO\_EHDR} & 33 & \texttt{a\_ptr} \\
+    \texttt{AT\_NULL} & 0 & ignored
+    & \texttt{AT\_UID} & 11 & \texttt{a\_val} \\
+    \texttt{AT\_IGNORE} & 1 & ignored
+    & \texttt{AT\_EUID} & 12 & \texttt{a\_val} \\
+    \texttt{AT\_EXECFD} & 2 & \texttt{a\_val}
+    & \texttt{AT\_GID} & 13 & \texttt{a\_val} \\
+    \texttt{AT\_PHDR} & 3 & \texttt{a\_ptr}
+    & \texttt{AT\_EGID} & 14 & \texttt{a\_val} \\
+    \texttt{AT\_PHENT} & 4 & \texttt{a\_val}
+    & \texttt{AT\_PLATFORM} & 15 & \texttt{a\_ptr} \\
+    \texttt{AT\_PHNUM} & 5 & \texttt{a\_val}
+    & \texttt{AT\_HWCAP} & 16 & \texttt{a\_val} \\
+    \texttt{AT\_PAGESZ} & 6 & \texttt{a\_val}
+    & \texttt{AT\_CLKTCK} & 17 & \texttt{a\_val} \\
+    \texttt{AT\_BASE} & 7 & \texttt{a\_ptr}
+    & \texttt{AT\_SECURE} & 23 & \texttt{a\_val} \\
+    \texttt{AT\_FLAGS} & 8 & \texttt{a\_val}
+    & \texttt{AT\_RANDOM} & 25 & \texttt{a\_ptr} \\
+    \texttt{AT\_ENTRY} & 9 & \texttt{a\_ptr}
+    & \texttt{AT\_EXECFN} & 31 & \texttt{a\_ptr} \\
+    \texttt{AT\_NOTELF} & 10 & \texttt{a\_val}
+    & \texttt{AT\_SYSINFO\_EHDR} & 33 & \texttt{a\_ptr} \\
     \bottomrule
   \end{tabular}
   \end{DIFnomarkup}
@@ -2343,14 +2422,20 @@ member, as shown in \cref{tab:auxtypes}.
     facility installed \\
     \texttt{HWCAP\_S390\_TE} & \texttt{0x400}
     & Transactional-execution facility installed \\
-    \texttt{HWCAP\_S390\_VX} & \texttt{0x0800}
+    \texttt{HWCAP\_S390\_VXRS} & \texttt{0x0800}
     & Vector facility installed \\
-    \texttt{HWCAP\_S390\_VXD} & \texttt{0x1000}
+    \texttt{HWCAP\_S390\_VXRS\_BCD} & \texttt{0x1000}
     & Vector packed-decimal facility installed \\
-    \texttt{HWCAP\_S390\_VXE} & \texttt{0x2000}
+    \texttt{HWCAP\_S390\_VXRS\_EXT} & \texttt{0x2000}
     & Vector-enhancements facility 1 installed \\
     \texttt{HWCAP\_S390\_GS} & \texttt{0x4000}
     & Guarded-storage facility installed \\
+    \texttt{HWCAP\_S390\_VXRS\_EXT2} & \texttt{0x8000}
+    & Vector-enhancements facility 2 installed \\
+    \texttt{HWCAP\_S390\_VXRS\_PDE} & \texttt{0x10000}
+    & Vector-packed-decimal enhancement facility installed \\
+    \texttt{HWCAP\_S390\_DFLT} & \texttt{0x40000}
+    & Deflate-conversion facility installed \\
     \bottomrule
   \end{tabularx}
   \end{DIFnomarkup}
@@ -3706,32 +3791,50 @@ processors in \cref{tab:dwarfreg}.
   \centering
   \begin{DIFnomarkup}
   \begin{threeparttable}
-    \begin{tabular}[t]{rl>{\quad}rl}
+    \begin{tabular}[t]{rl!{\qquad}rl}
       \toprule
       DWARF  & \ARCH{}  & DWARF  & \ARCH{} \\
       number & register & number & register \\
       \midrule
       0--15 & \texttt{r0}--\texttt{r15}
-                        & 26 & \texttt{f12} \\
-      16 & \texttt{f0}
-                        & 27 & \texttt{f14} \\
-      17 & \texttt{f2}
-                        & 28 & \texttt{f9} \\
-      18 & \texttt{f4}
-                        & 29 & \texttt{f11} \\
-      19 & \texttt{f6}
-                        & 30 & \texttt{f13} \\
-      20 & \texttt{f1}
-                        & 31 & \texttt{f15} \\
-      21 & \texttt{f3}
-                        & 32--47 & \texttt{cr0}--\texttt{cr15}\tnote{\dagger} \\
-      22 & \texttt{f5}
-                        & 48--63 & \texttt{a0}--\texttt{a15} \\
-      23 & \texttt{f7}
-                        & 64 & PSW mask \\
-      24 & \texttt{f8}
                         & 65 & PSW address \\
-      25 & \texttt{f10} \\
+      16 & \texttt{f0} / \texttt{v0}
+                        & 66 & \emph{reserved} (z/OS) \\
+      17 & \texttt{f2} / \texttt{v2}
+                        & 67 & \emph{reserved} (z/OS) \\
+      18 & \texttt{f4} / \texttt{v4}
+                        & 68 & \texttt{v16} \\
+      19 & \texttt{f6} / \texttt{v6}
+                        & 69 & \texttt{v18} \\
+      20 & \texttt{f1} / \texttt{v1}
+                        & 70 & \texttt{v20} \\
+      21 & \texttt{f3} / \texttt{v3}
+                        & 71 & \texttt{v22} \\
+      22 & \texttt{f5} / \texttt{v5}
+                        & 72 & \texttt{v17} \\
+      23 & \texttt{f7} / \texttt{v7}
+                        & 73 & \texttt{v19} \\
+      24 & \texttt{f8} / \texttt{v8}
+                        & 74 & \texttt{v21} \\
+      25 & \texttt{f10} / \texttt{v10}
+                        & 75 & \texttt{v23} \\
+      26 & \texttt{f12} / \texttt{v12}
+                        & 76 & \texttt{v24} \\
+      27 & \texttt{f14} / \texttt{v14}
+                        & 77 & \texttt{v26} \\
+      28 & \texttt{f9} / \texttt{v9}
+                        & 78 & \texttt{v28} \\
+      29 & \texttt{f11} / \texttt{v11}
+                        & 79 & \texttt{v30} \\
+      30 & \texttt{f13} / \texttt{v13}
+                        & 80 & \texttt{v25} \\
+      31 & \texttt{f15} / \texttt{v15}
+                        & 81 & \texttt{v27} \\
+      32--47 & \texttt{cr0}--\texttt{cr15}\tnote{\dagger}
+                        & 82 & \texttt{v29} \\
+      48--63 & \texttt{a0}--\texttt{a15}
+                        & 83 & \texttt{v31} \\
+      64 & PSW mask \\
       \bottomrule
     \end{tabular}
     \medskip
@@ -3751,11 +3854,12 @@ For the placement of a piece within a composite location description, as
 defined by the byte piece operation \texttt{DW\_OP\_piece} or the bit
 piece operation \texttt{DW\_OP\_bit\_piece}, the following applies:
 \begin{itemize}
-\item Pieces of a floating-point register are taken from the left.  This
-  means that a bit piece with offset \(t\) and size \(n\) consists of the
-  register's bits numbered from \(t\) to \(t+n-1\), according to
-  big-endian bit numbering.  And a byte piece of a floating-point
-  register of size \(n\) consists of the register's \(n\) leftmost bytes.
+\item Pieces of a floating-point or vector register are taken from the
+  left.  This means that a bit piece with offset \(t\) and size \(n\)
+  consists of the register's bits numbered from \(t\) to \(t+n-1\),
+  according to big-endian bit numbering.  And a byte piece of a
+  floating-point or vector register of size \(n\) consists of the
+  register's \(n\) leftmost bytes.
 \item For any other register, pieces are taken from the right.  This means
   that a bit piece with offset \(t\) and size \(n\) consists of the bits
   numbered from \(w-t-n\) to \(w-t-1\), where \(w\) is the register's bit
@@ -4907,6 +5011,10 @@ for some applications:
   chapters 4 and 5, latest snapshot,
   \url{http://www.sco.com/developers/gabi/latest/contents.html};
   2013
+\bibitem{gnu-vec}
+  \bibTitle{Using the GNU Compiler Collection,}
+  vector extensions,
+  \url{https://gcc.gnu.org/onlinedocs/gcc/Vector-Extensions.html}
 \bibitem{sa22}
   \bibTitle{\ARCH{} Principles of Operation,}
   IBM Publication No.~SA22-{\ifzseries 7832-12\else 7201-08\fi};
