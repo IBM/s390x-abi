@@ -1983,6 +1983,175 @@ caller, depending on the return value type:
 \end{itemize}
 
 \section{Operating System Interface}
+This section describes various interfaces with the operating system that
+are specific to the \ABINAME{} ABI\@.
+
+\subsection{Signal Context}
+\index{signal context}
+A signal handler that was installed with \texttt{sigaction} using the
+\texttt{SA\_SIGINFO} flag receives three arguments, as follows:
+\begin{center}
+  \lstinline@void handler(int sig, siginfo_t *info, void *ucontext);@
+\end{center}
+The second argument \texttt{info} is a pointer to a structure containing
+additional signal information, including the number \texttt{si\_code} that
+indicates why the signal \texttt{sig} was sent.
+
+The third argument \texttt{ucontext} points to a \texttt{ucontext\_t}
+structure on the stack where signal-related context information has been
+saved by the operating system.  It contains the processing context to be
+restored when resuming the interrupted program, including the
+architecture-dependent register state.  Although most signal handlers will
+ignore this information, some may access it for debugging purposes such as
+printing the registers, or when their logic depends on that state.
+
+\Cref{lst:ucontext} shows the declaration of \texttt{ucontext\_t} on
+systems implementing the \ABINAME{} ABI.
+
+\begin{lstlisting}[style=float,caption={[The \texttt{ucontext\_t}
+    structure]The \texttt{ucontext\_t} structure.  The size of
+    \texttt{uc\_sigmask} may vary, and additional information may be
+    stored after it.},label={lst:ucontext}]
+typedef struct {
+    unsigned long      mask;       /* PSW mask */
+    unsigned long      addr;       /* PSW address */
+} __psw_t;
+
+typedef union {
+    double             d;
+    float              f;
+} fpreg_t;
+
+typedef struct {
+    unsigned int       fpc;        /* floating-point control register */
+    fpreg_t            fprs[16];   /* floating-point registers */
+} fpregset_t;
+
+typedef struct {
+    __psw_t            psw;
+    unsigned long      gregs[16];  /* general registers */
+    unsigned int       aregs[16];  /* access registers */
+    fpregset_t         fpregs;
+} mcontext_t;
+
+typedef struct {
+    void              *ss_sp;
+    int                ss_flags;
+    size_t             ss_size;
+} stack_t;
+
+typedef ... sigset_t;               /* opaque type */
+
+struct ucontext_t {
+    unsigned long      uc_flags;
+    struct ucontext_t *uc_link;
+    stack_t            uc_stack;
+    mcontext_t         uc_mcontext; /* machine-specific context */
+    sigset_t           uc_sigmask;  /* blocked signals */
+};
+\end{lstlisting}
+
+\subsection{Exception Interface}
+\label{exceptionint}
+\index{exception}
+When the CPU detects an exceptional condition while a process is executing
+instructions, an \index{interruption}interruption may occur, transferring
+control to the operating system.  The operating system then handles the
+interruption either in a manner transparent to the application, or by
+delivering a signal.
+
+If such an exception and its corresponding interruption are immediately
+caused by the execution of an instruction, the exception is called
+``synchronous''.  Program interruptions generally fall into this category.
+They may give rise to \texttt{SIGILL}, \texttt{SIGSEGV}, \texttt{SIGBUS},
+\texttt{SIGTRAP}, or \texttt{SIGFPE}\@.  If one of these signals is
+generated due to an exception when the signal is blocked, the behavior is
+undefined.
+
+When a signal handler other than for \texttt{SIGSEGV} or \texttt{SIGBUS}
+gets control after a synchronous exception, the \texttt{si\_addr} field in
+the signal handler's \texttt{siginfo\_t} argument points to the
+instruction that caused the exception, while the \index{PSW address!after
+  signal}PSW address in the signal context points to the next instruction.
+
+In the case of \texttt{SIGSEGV} or \texttt{SIGBUS}, the PSW address points
+to the faulting instruction instead, whereas \texttt{si\_addr} points to
+the address of the memory access causing the fault, possibly rounded down
+to a page boundary.
+
+The correspondence between the causes of program interruptions and the
+resulting signals\index{signal!from exception} is shown in
+\cref{tab:exceptions}.
+
+\begin{table}
+  \centering
+  \begin{DIFnomarkup}
+  \begin{threeparttable}
+    \begin{tabular}{llll}
+      \toprule
+      \ARCH{} exception
+      & Signal & \texttt{si\_code} \\
+      \midrule
+      Addressing & \multirow{10}{*}{\texttt{SIGILL}} & \texttt{ILL\_ILLADR} \\
+      Data, general-operand & & \texttt{ILL\_ILLOPN} \\
+      Execute & & \texttt{ILL\_ILLOPN} \\
+      Operand & & \texttt{ILL\_ILLOPN} \\
+      Operation, no breakpoint\tnote{\dagger} & & \texttt{ILL\_ILLOPC} \\
+      Privileged-operation & & \texttt{ILL\_PRVOPC} \\
+      Special-operation & & \texttt{ILL\_ILLOPN} \\
+      Space-switch & & \texttt{ILL\_PRVOPC} \\
+      Specification & & \texttt{ILL\_ILLOPN} \\
+      Transaction-constraint & & \texttt{ILL\_ILLOPN} \\
+      \midrule
+      Operation, breakpoint\tnote{\dagger} & \texttt{SIGTRAP}
+               & \texttt{TRAP\_BRKPT} \\
+      \midrule
+      Data, (simulated) IEEE invalid operation
+      & \multirow{18}{*}{\texttt{SIGFPE}} & \texttt{FPE\_FLTINV} \\
+      Data, (simulated) IEEE division by zero & & \texttt{FPE\_FLTDIV} \\
+      Data, any (simulated) IEEE overflow & & \texttt{FPE\_FLTOVF} \\
+      Data, any (simulated) IEEE underflow & & \texttt{FPE\_FLTUND} \\
+      Data, any (simulated) IEEE inexact\tnote{\ddagger} &
+               & \texttt{FPE\_FLTRES} \\
+      Data, neither IEEE nor general-operand & & \texttt{SI\_USER} \\
+      Fixed-point/decimal divide & & \texttt{FPE\_INTDIV} \\
+      Fixed-point/decimal overflow & & \texttt{FPE\_INTOVF} \\
+      HFP divide & & \texttt{FPE\_FLTDIV} \\
+      HFP exp\@. overflow & & \texttt{FPE\_FLTOVF} \\
+      HFP exp\@. underflow & & \texttt{FPE\_FLTUND} \\
+      HFP square root & & \texttt{FPE\_FLTINV} \\
+      HFP significance & & \texttt{FPE\_FLTRES} \\
+      Vector-processing, invalid operation & & \texttt{FPE\_FLTINV} \\
+      Vector-processing, division by zero & & \texttt{FPE\_FLTDIV} \\
+      Vector-processing, overflow & & \texttt{FPE\_FLTOVF} \\
+      Vector-processing, underflow & & \texttt{FPE\_FLTUND} \\
+      Vector-processing, inexact & & \texttt{FPE\_FLTRES} \\
+      \midrule
+      Protection
+      & \multirow{2}{*}{\texttt{SIGSEGV}} & \texttt{SEGV\_ACCERR} \\
+      Any translation\tnote{*} & & \texttt{SEGV\_MAPERR} \\
+      \midrule
+      Any translation\tnote{*} & \texttt{SIGBUS} & \texttt{BUS\_ADDRERR} \\
+      \bottomrule
+    \end{tabular}
+    \medskip
+    \begin{tablenotes}
+    \item [\dagger] A breakpoint\index{breakpoint} is recognized when a
+      \texttt{ptrace} target executes the special illegal instruction
+      \texttt{0x0001}.
+    \item [\ddagger] Except if an overflow or underflow condition is
+      indicated as well.
+    \item [*] For a translation exception the operating system may yield
+      SIGSEGV or SIGBUS, or it may handle the fault without a signal.
+    \end{tablenotes}
+  \end{threeparttable}
+  \end{DIFnomarkup}
+  \caption[Exceptions and signals]{Exceptions and signals.
+    \texttt{si\_code} refers to the respective field in
+    \texttt{siginfo\_t}.}
+  \label{tab:exceptions}
+\end{table}
+
 \subsection{Virtual Address Space}
 \index{address space}
 Processes execute in a \ADDRBITS{}-bit virtual address
@@ -2146,79 +2315,6 @@ Note that the ABI does not define the implementation of individual
 system calls.  Instead programs should use the system libraries.
 Programs with embedded \texttt{SVC} instructions do not conform
 to the ABI.
-
-\section{Exception Interface}
-\label{exceptionint}
-\index{exception}
-The \ARCH{} exception mechanism
-allows the processor to change to supervisor state as a result of six
-different causes: system calls, I/O interrupts, external interrupts,
-machine checks, restart interruptions, or program checks (unusual
-conditions arising in the execution of instructions).
-
-% TODO: This description is not really relevant for the ABI.  Better refer
-% to the PoP instead.
-When exceptions occur, the following steps are implemented:
-\begin{enumerate}
-\item Information (such as the address of the next instruction to be
-  executed after control is returned to the original program) is
-  saved.
-\item Program control passes from problem to supervisor state.
-\item Software continues execution at an address (the exception
-  vector) predetermined for each exception.
-\end{enumerate}
-
-Exceptions may be synchronous or asynchronous.  Synchronous exceptions,
-being caused by instruction execution, can be explicitly generated by a
-process.  The operating system handles an exception either by completing
-the faulting operation in a manner transparent to the application or by
-delivering a signal to the application.  The correspondence between
-exceptions and signals\index{signal!from exception} is shown in
-\cref{tab:exceptions}.
-
-% TODO: Complete the exception table.
-\begin{table}
-  \centering
-  \begin{DIFnomarkup}
-  \begin{tabular}{lll}
-    \toprule
-    Exception Name & Signal & Examples \\
-    \midrule
-    \multirow{3}{*}{Illegal instruction}
-    & \multirow{3}{*}{SIGILL}
-    & Illegal or privileged instruction \\
-    & & Invalid instruction form \\
-    & & Optional, unimplemented instruction \\
-    \midrule
-    \multirow{2}{*}{Storage access}
-    & \multirow{2}{*}{SIGSEGV}
-    & Unmapped instruction or data location access \\
-    & & Storage protection violation \\
-    \midrule
-    \multirow{2}{*}{Alignment}
-    & \multirow{2}{*}{SIGBUS}
-    & Invalid data item alignment \\
-    & & Invalid memory access \\
-    \midrule
-    Breakpoint & SIGTRAP & Breakpoint program check \\
-    \midrule
-    \multirow{4}{*}{Floating exception}
-    & \multirow{4}{*}{SIGFPE}
-    & Floating-point overflow or underflow \\
-    & & Floating-point divide by zero \\
-    & & Floating-point conversion overflow \\
-    & & Other enabled floating-point exceptions \\
-    \bottomrule
-  \end{tabular}
-  \end{DIFnomarkup}
-  \caption{Exceptions and signals}
-  \label{tab:exceptions}
-\end{table}
-
-The signals that an exception may give rise to are SIGILL,
-SIGSEGV, SIGBUS, SIGTRAP, and SIGFPE\@.  If one of these signals is
-generated due to an exception when the signal is blocked, the behavior
-is undefined.
 
 \section{Process Initialization}
 \label{procinit}
