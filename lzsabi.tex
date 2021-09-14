@@ -1271,6 +1271,12 @@ extends the 64-bit floating-point registers to 128-bit vector registers,
 \texttt{v0} through \texttt{v15}, and provides 16 additional 128-bit
 vector registers, \texttt{v16} through \texttt{v31}.
 
+In addition, the processor state includes 32-bit access registers
+\texttt{a0} through \texttt{a15}, a 2-bit \index{condition code}condition
+code \texttt{cc}, a 4-bit \index{program mask}program mask \texttt{pm},
+and a 32-bit \index{FPC}floating-point control register \texttt{fpc}.
+
+\subsubsection{Register Preservation Rules}
 \begin{table}
   \centering
   \begin{DIFnomarkup}
@@ -1311,9 +1317,11 @@ vector registers, \texttt{v16} through \texttt{v31}.
       \texttt{v16}…\texttt{v23} & -- & Volatile \\
       \texttt{v24} & Argument / return value & Volatile \\
       \texttt{v25}…\texttt{v31} & Arguments & Volatile \\
-      Access register{\ifzseries s\fi} 0{\ifzseries , 1\fi} &
+      \texttt{cc} & Condition code & Volatile \\
+      \texttt{pm} & Program mask & Cleared \\
+      \texttt{a0}{\ifzseries , \texttt{a1}\fi} &
       Reserved for system use & Reserved \\
-      Access registers {\ifzseries 2\else 1\fi}…15 & -- & Volatile \\
+      \texttt{a\ifzseries 2\else 1\fi}…\texttt{a15} & -- & Volatile \\
       \bottomrule
     \end{tabularx}
     \medskip
@@ -1322,6 +1330,8 @@ vector registers, \texttt{v16} through \texttt{v31}.
       function calls.
     \item Saved: These registers' values are preserved across function
       calls.
+    \item Cleared: These registers must be 0 before entering/leaving a
+      function.
     \item Reserved: These registers must not be modified by
       ABI-compliant functions.
     \item [\dagger\dagger] Except for bytes 0--7, which are aliased to
@@ -1358,16 +1368,17 @@ Using these definitions, the registers are categorized as follows:
   since they are aliased to {\ifzseries \texttt{f8} through
     \texttt{f15}\else \texttt{f4} and \texttt{f6}\fi}.  The right halves
   are volatile.
+\item The program mask \texttt{pm} must be zero before entering and before
+  leaving a function.
 \item All other registers are volatile.
 \item Furthermore the values in registers \texttt{r0} and \texttt{r1}
   may be altered by the interface code in cross-module calls, so a
   function cannot depend on the values in these registers having the
   same values that were placed in them by the caller.
   % FIXME: What about the FPC?  -> See the FPSCR in the POWER ABI.
-  % FIXME: Describe the PSWM.
 \end{itemize}
 
-\medskip
+\subsubsection{Register Roles}
 The roles\index{registers!roles} mentioned in \cref{tab:regsacrosscall}
 have the following meaning:
 \begin{description}
@@ -1401,6 +1412,7 @@ have the following meaning:
   more information about stack frames, see \cref{stackframe}.
 \end{description}
 
+\subsubsection{Registers And Signal Handling}
 Signals can interrupt processes.  Functions called during signal
 handling have no unusual restrictions on their use of registers.
 Moreover, if a signal-handling function returns, the process will
