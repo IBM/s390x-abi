@@ -15,7 +15,7 @@
 
 % --- Version ---
 
-\newcommand{\Version}{1.x}
+\newcommand{\Version}{1.6}
 
 % --- Packages ---
 
@@ -354,8 +354,10 @@ Interface'' and should be read in conjunction with it.
 \section*{History}
 
 \begin{description}
-\item[1.x] Add information about vector types and registers, based on
-  input from Andreas Krebbel.
+\item[1.6] Describe vector types and registers (based on input from
+  Andreas Krebbel); mention condition code and program mask; enhance
+  exception handling information.  Published at
+  \url{https://github.com/ibm/s390x-abi}, November 2021.
 \item[1.5] \emph{``ELF Application Binary Interface
     \ABINAME{}~Supplement''} -- Conversion to \LaTeX{}; various
   corrections to revision~1.02.  Edited by Andreas Arnez.  Published at
@@ -383,6 +385,9 @@ This section describes the processor-specific information for
   \else
   \cite{sa22} (SA22-7201) defines \theARCH{}.
   \fi}
+
+% TODO: Explain micro-architecture levels
+% - "based on editions of the z/Architecture"
 
 Programs intended to execute directly on the processor use the
 \ARCH{} instruction set and the
@@ -2505,6 +2510,7 @@ member, as shown in \cref{tab:auxtypes}.
 \end{table}
 
 \begin{table}
+  \centering
   \begin{DIFnomarkup}
   \begin{tabularx}{\textwidth}{lr>{\raggedright\arraybackslash}X}
     \toprule
