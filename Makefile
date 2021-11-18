@@ -11,6 +11,9 @@ INPUTS = $(MAIN) $(OTHERS)
 TEX2PDF = latexmk -lualatex
 TEX2HTML = make4ht --lua
 
+# Markdown formatter (for README.md)
+MD2HTML = comrak --syntax-highlighting none
+
 # Conversion to plain text
 HTML2TXT = elinks \
 	-dump -dump-charset ascii -dump-width 81 \
@@ -94,6 +97,9 @@ $(MAIN)_s390x-%.patch: $(MAIN)_s390x-%.txt $(MAIN)_s390x.txt
 
 # Other targets
 
+%.html: %.md
+	$(MD2HTML) $< > $@
+
 $(MAIN).tar.gz : $(MAIN).tex $(INPUTS:=.tex)  $(MAIN).mk4 \
 		Makefile README.md LICENSE
 	tar -czf $@ $^
@@ -101,3 +107,4 @@ $(MAIN).tar.gz : $(MAIN).tex $(INPUTS:=.tex)  $(MAIN).mk4 \
 clean:
 	rm -rf $(SUBDIRS) s390x-*-html s390-*-html s390x-*-pdf s390-*-pdf
 	rm -rf *.patch $(MAIN)_*.pdf $(MAIN)_*.txt $(MAIN).tar.gz
+	rm -rf README.html

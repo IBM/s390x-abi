@@ -12,6 +12,8 @@ project's ["Releases"][releases] section.
 In order to build the PDF yourself from source, you need:
 
 * a full TeX installation (such as [TeX Live][texlive])
+  * including latexmk, LuaTeX, the "TeX Gyre DejaVu Math" font, and the
+    various LaTeX packages used by the document
 * the [IBM Plex][plex] fonts
 * GNU Make
 
