@@ -1589,7 +1589,7 @@ is customary to assign a standard save slot to each register, as shown in
     \draw [<->] (r2) -- (r6);
     \foreach \Node in {A, B, C} {
       \draw (\Node -| m.west) -- (\Node -| m.east);
-    };
+    }
     \ifzseries
     \foreach \where/\offs in {m.north/160, A/128, B/56, C/16, m.south/8} {
       \path (\where -| m.west) +(-1ex,0)
@@ -1701,17 +1701,17 @@ If needed, more arguments are passed in the parameter area, which starts
     };
     \foreach \Node in {A, ..., D} {
       \draw (\Node -| m.west) -- (\Node -| m.east);
-    };
+    }
     \ifzseries
     \foreach \Node/\offs in {A/+16, B/+8, C/160, D/8} {
       \path (\Node -| m.west) + (-1ex,0)
       node [above left] {\texttt{\offs}};
-    };
+    }
     \else
     \foreach \Node/\offs in {A/+8, B/+4, C/96, D/4} {
       \path (\Node -| m.west) + (-1ex,0)
       node [above left] {\texttt{\offs}};
-    };
+    }
     \fi
     \path (m.south east) +(1ex,0) node [above right] {Low Address};
     \path (m.north east) +(1ex,0) node [below right] {High Address};
