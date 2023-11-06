@@ -4108,11 +4108,11 @@ affected bits of each field type.
 |0                            31|
 +-------------------------------+
 
-+-------+-------+-------+-------+
-|0      |1      |2      |3      |
-|       |      pc24             |
-|0     7|8                    31|
-+-------+-----------------------+
++-------+-------+-------+
+|0      |1      |2      |
+|          pc24         |
+|0                    23|
++-------+---------------+
 
 +----+--+-------+-------+-------+
 |0   |  |1      |2      |3      |
@@ -4157,7 +4157,7 @@ affected bits of each field type.
       {0 64/quad64/}/8/{0,0},
       {0 32/word32/}/4/{0,-1.3},
       {0 32/pc32/}/4/{0,-2.6},
-      {0 8/ /,32/pc24/}/4/{0,-3.9},
+      {0 24/pc24/}/3/{0,-3.9},
       {0 4/ /,24/mid20/, 32/ /}/4/{0,-5.2},
       {0 16/half16/}/2/{0,-6.5},
       {0 16/pc16/}/2/{44,-1.3},
@@ -4219,8 +4219,8 @@ affected bits of each field type.
   the left by 1 before it is used as a program counter relative
   displacement (for example, the immediate field of a ``Load Address
   Relative Long'' instruction).
-\item[\texttt{pc24}] This specifies a 24-bit field contained within 4
-  consecutive bytes with 2-byte alignment.  The signed value in this field
+\item[\texttt{pc24}] This specifies a 24-bit field contained within 3
+  consecutive bytes with 1-byte alignment.  The signed value in this field
   is shifted to the left by 1 before it is used as a program counter
   relative displacement (for example, the third immediate field of a
   ``Branch Prediction Relative Preload'' instruction).
@@ -4240,7 +4240,7 @@ affected bits of each field type.
   halfword with 2-byte alignment.  The 12 bit unsigned value is the
   displacement of a memory reference.
 \item[\texttt{pc12}] This specifies a 12-bit field contained within a
-  halfword with 2-byte alignment.  The signed value in this field is
+  halfword with 1-byte alignment.  The signed value in this field is
   shifted to the left by 1 before it is used as a program counter relative
   displacement (for example, the second immediate field of a ``Branch
   Prediction Relative Preload'' instruction).
@@ -4349,7 +4349,7 @@ types in \cref{tab:relocations}:
   \texttt{R\_390\_PC32} & 5 & \texttt{word32} & $S + A - P$ \\
   \texttt{R\_390\_GOT12} & 6 & \texttt{low12} & $O + A$ \\
   \texttt{R\_390\_GOT32} & 7 & \texttt{word32} & $O + A$ \\
-  \texttt{R\_390\_PLT32} & 8 & \texttt{word32} & $L + A$ \\
+  \texttt{R\_390\_PLT32} & 8 & \texttt{word32} & $L + A - P$ \\
   \texttt{R\_390\_COPY}\textsuperscript{ \dagger} & 9 & \emph{none} & \\
   \texttt{R\_390\_GLOB\_DAT}\textsuperscript{ \dagger} & 10 & \texttt{quad64} & $S + A$ \\
   \texttt{R\_390\_JMP\_SLOT}\textsuperscript{ \dagger} & 11 & \emph{none} & \\
