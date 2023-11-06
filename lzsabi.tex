@@ -4828,19 +4828,20 @@ memory segments reside at fixed virtual addresses.
 
 The format and interpretation of the Global Offset Table is processor
 specific.  For \ABINAME{} the symbol \texttt{\_GLOBAL\_OFFSET\_TABLE\_}
-may be used to access the table.  The symbol refers to the start of
-the \texttt{.got} section.  Two words in the GOT are reserved:
+may be used to access the table.  The symbol refers to the start of the
+\texttt{.got} section.  The first three \ifzseries double\fi words in the
+GOT are reserved:
 \begin{itemize}
-\item The word at \texttt{\_GLOBAL\_OFFSET\_TABLE\_[0]} is set by the
-  linkage editor to hold the address of the dynamic structure,
-  referenced with the symbol \texttt{\_DYNAMIC}.  This allows a
-  program, such as the dynamic linker, to find its own dynamic
-  structure without having yet processed its relocation entries.  This
-  is especially important for the dynamic linker, because it must
-  initialize itself without relying on other programs to relocate its
-  memory image.
-\item The word at \texttt{\_GLOBAL\_OFFSET\_TABLE\_[1]} is reserved
-  for future use.
+\item The \ifzseries double\fi word at
+  \texttt{\_GLOBAL\_OFFSET\_TABLE\_[0]} is set by the linkage editor to
+  hold the address of the dynamic structure, referenced with the symbol
+  \texttt{\_DYNAMIC}.  This allows a program, such as the dynamic linker,
+  to find its own dynamic structure without having yet processed its
+  relocation entries.  This is especially important for the dynamic
+  linker, because it must initialize itself without relying on other
+  programs to relocate its memory image.
+\item The \ifzseries double\fi words at
+  \texttt{\_GLOBAL\_OFFSET\_TABLE\_[1...2]} are reserved for system use.
 \end{itemize}
 
 The Global Offset Table resides in the ELF \texttt{.got} section.
