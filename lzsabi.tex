@@ -3898,8 +3898,10 @@ DWARF is a specification developed for symbolic source-level
 debugging.  The debugging information format does not favor the design
 of any compiler or debugger.
 
-The DWARF definition requires some machine-specific definitions.  The
-register number mapping\index{DWARF!register
+The DWARF definition requires some machine-specific definitions.
+
+\subsection{DWARF Register Numbers}
+The register number mapping\index{DWARF!register
   numbers}\index{registers!DWARF numbers} is specified for the \ARCH{}
 processors in \cref{tab:dwarfreg}.
 
@@ -3964,8 +3966,8 @@ processors in \cref{tab:dwarfreg}.
   \label{tab:dwarfreg}
 \end{table}
 
-% FIXME: Should document the CFA and its offset.
-
+\subsection{DWARF Locations}
+\index{DWARF!locations}
 For the placement of a piece within a composite location description, as
 defined by the byte piece operation \texttt{DW\_OP\_piece} or the bit
 piece operation \texttt{DW\_OP\_bit\_piece}, the following applies:
@@ -3988,6 +3990,17 @@ register value operation \texttt{DW\_OP\_regval\_type} or the register
 location description \texttt{DW\_OP\_regx}, the resulting value consists
 of the same bits as the bit piece starting at offset zero and having the
 size of the given type.
+
+\subsection{Call Frame Information}
+\index{DWARF!call frame information}%
+When interpreting DWARF call frame information, the default rule for the
+following registers is the same value rule:
+\begin{itemize}
+\item \texttt{r6} through \texttt{r15}
+\item \texttt{v8} through \texttt{v15}
+\item \texttt{a0} and \texttt{a1}
+\end{itemize}
+For all other registers, the undefined rule applies by default.
 
 \chapter{Object files}
 \label{chobjfiles}
