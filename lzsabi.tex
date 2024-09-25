@@ -5116,6 +5116,21 @@ for some applications:
   process initialization, before the application receives control.
 \end{enumerate}
 
+\ifzseries
+
+\subsection{Hash Table}
+\label{hashtable}
+\index{hash table} Each loadable object may contain a hash table to speed
+up symbol access.  ELF specifies a hash table format that consists of two
+arrays of symbol table indexes, preceded by each of these array's number
+of entries.
+
+While the general ELF format definition specifies all integers in the hash
+table to be stored as \texttt{Elf\NBITS\_Word}, the \ABINAME{} ABI uses
+\texttt{Elf\NBITS\_Xword} instead.
+
+\fi
+
 \appendix
 \input{fdl-1.1.tex}
 
