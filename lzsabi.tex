@@ -1296,7 +1296,8 @@ and a 32-bit \index{FPC}floating-point control register \texttt{fpc}.
       {\ifzseries\texttt{r3}, \fi}\texttt{r4}, \texttt{r5} &
       Arguments & Volatile \\
       \texttt{r6} & Argument & Saved \\
-      \texttt{r7}…\texttt{r11} & -- & Saved \\
+      \texttt{r7}…\texttt{r10} & -- & Saved \\
+      \texttt{r11} & (Commonly used as frame pointer) & Saved \\
       \texttt{r12} & (Commonly used as GOT pointer) & Saved \\
       \texttt{r13} & (Commonly used as literal pool pointer) & Saved \\
       \texttt{r14} & Return address & Volatile \\
@@ -1395,6 +1396,10 @@ have the following meaning:
   returns, such a register may hold {\ifzseries\else (part of)\fi}%
   the return value of that function, according to the rules defined in
   \cref{retvalues}.
+\item[Frame pointer:] \index{frame pointer} A frame pointer register
+  establishes consistent addressability of a function's local variables
+  when dynamic stack allocation is performed, see \cref{dynamicstack}.  If
+  a frame pointer is maintained, it should be stored in \texttt{r11}.
 \item[GOT pointer:] \index{GOT pointer} Global Offset Table pointer.  In a
   position-independent module, such a register may point to the start of
   that module's GOT, described in \cref{globaloffsettable}.  If
@@ -1436,7 +1441,7 @@ for inline assemblies is recommended:
   internally whenever possible.
 \item General registers \texttt{r2} to \texttt{r5} should be second
   choice.
-\item General registers \texttt{r12} to \texttt{r15} should only be
+\item General registers \texttt{r11} to \texttt{r15} should only be
   used for their standard function.
 \end{itemize}
 
