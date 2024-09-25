@@ -3994,6 +3994,15 @@ location description \texttt{DW\_OP\_regx}, the resulting value consists
 of the same bits as the bit piece starting at offset zero and having the
 size of the given type.
 
+\subsection{Canonical Frame Address}
+\index{canonical frame address}
+\index{CFA}
+According to the DWARF standard, each call frame is identified by an
+address on the stack referred to as the canonical frame address or CFA.
+Let \texttt{SP} be the value of the stack pointer at the call site in the
+previous frame.  Then the CFA is defined to have the value
+\(\mbox{\texttt{SP}} + \STACKSIZE\) for \ARCH{} processors.
+
 \subsection{Call Frame Information}
 \index{DWARF!call frame information}%
 When interpreting DWARF call frame information, the default rule for the
