@@ -671,6 +671,52 @@ represent all of its enumeration constants and is not smaller than
   \label{tab:scalar}
 \end{table}
 
+\subsubsection{Bit-Precise Integers \texttt{\_BitInt(\(N\))}}
+\index{N-bit integer}%
+\index{\texttt{\_BitInt}}%
+\index{bit-precise integer}%
+For an integer constant \(N\) the bit-precise signed \(N\)-bit integer
+type \texttt{\_BitInt(\(N\))} and its unsigned counterpart
+\texttt{unsigned \_BitInt(\(N\))} are represented as follows:
+\begin{itemize}
+\item If \(N \le \NBITS{}\): like the smallest appropriately-signed
+  fundamental integer type that covers its value range.  Thus the size and
+  alignment is 1, 2, {\ifzseries 4, or 8\else or 4\fi} bytes.
+\item If \(N > \NBITS{}\): like a struct of \texttt{long} or
+  \texttt{unsigned long} fields, using the smallest number of fields that
+  can contain the type.  The fields are ordered from most to least
+  significant, and the least significant bit is stored in the least
+  significant bit of the last field.
+\end{itemize}
+In both cases the representation may have more bits than the abstract
+type.  Excess bits use sign or zero extension, as appropriate.
+
+\Cref{tab:bitint} summarizes the representation of these integer types.
+
+\begin{table}
+  \centering
+  \begin{DIFnomarkup}
+  \begin{tabular}[t]{c@{\,\ldots\,}ccc}
+    \toprule
+    \multicolumn{2}{c}{\(N\)} & Size & Alignment \\
+    \midrule
+     1 &   8 &  1 & 1 \\
+     9 &  16 &  2 & 2 \\
+    17 &  32 &  4 & 4 \\
+    \ifzseries
+    33 &  64 &  8 & 8 \\
+    \fi
+    \multicolumn{2}{c}{\(>\NBITS{}\)}
+                              & \(\NBYTES{}\cdot\left\lceil\frac{N}{\NBITS{}}\right\rceil\)
+                                     & \NBYTES{} \\
+    \bottomrule
+  \end{tabular}
+  \end{DIFnomarkup}
+  \caption[Bit-Precise Integer Types] {Bit-Precise Integer Types
+    \texttt{\_BitInt(\(N\))} and \texttt{unsigned \_BitInt(\(N\))}}
+  \label{tab:bitint}
+\end{table}
+
 \subsubsection{Aggregates and Unions}
 Aggregates\index{aggregate}\index{type!aggregate}
 (structures\index{structure} and arrays\index{array}) and
@@ -1801,25 +1847,25 @@ argument word.
     \begin{itemize}
     \item One of the simple integer types no more than \NBITS{} bits wide.
       This includes \texttt{signed} \texttt{char}, \texttt{short},
-      \texttt{int}, \texttt{long},{\ifzseries{} \texttt{long}
-        \texttt{long},\fi} their unsigned counterparts, \texttt{\_Bool},
-      and any \texttt{enum} type.  If such an argument is shorter than
-      \NBITS{} bits, replace it by a full \NBITS{}-bit integer
-      representing the same number, using sign or zero extension, as
-      appropriate.
+      \texttt{int}, \texttt{long}, \ifzseries \texttt{long} \texttt{long},
+      \fi \texttt{\_BitInt(\(N\))} with \(N \le \NBITS{}\), their unsigned
+      counterparts, \texttt{\_Bool}, and any \texttt{enum} type.  If such
+      an argument is shorter than \NBITS{} bits, replace it by a full
+      \NBITS{}-bit integer representing the same number, using sign or
+      zero extension, as appropriate.
     \item Any pointer type.
     \item A struct or a union of 1, 2, {\ifzseries 4, or 8\else or 4\fi}
       bytes that is not a double\_or\_float (see above).  If such a
       struct or union is strictly smaller than \NBYTES{} bytes, extend it
       to \NBYTES{} bytes by adding padding bytes with unspecified contents
       on the left.
-    \item A struct or union of any other size, a complex type, an
-      \texttt{\_\_int128}, a \texttt{long} \texttt{double}, a
-      \texttt{\_Decimal128}, or a vector whose size exceeds 16 bytes.
-      Replace such an argument by a pointer to the object, or to a copy
-      where necessary to enforce call-by-value semantics.  Only if the
-      caller can ascertain that the object is ``constant'' can it pass a
-      pointer to the object itself.
+    \item A struct or union of any other size, any integer type with more
+      than \NBITS{} bits, a \texttt{long} \texttt{double}, a
+      \texttt{\_Decimal128}, a complex type, or a vector whose size
+      exceeds 16 bytes.  Replace such an argument by a pointer to the
+      object, or to a copy where necessary to enforce call-by-value
+      semantics.  Only if the caller can ascertain that the object is
+      ``constant'' can it pass a pointer to the object itself.
     \end{itemize}
     If $\mbox{\texttt{gr}}>6$, go to \jumplabel{more}.  Otherwise load the
     argument value (now \NBITS{} bits wide) into general register
@@ -1975,9 +2021,9 @@ caller, depending on the return value type:
   in the left half of \texttt{f0} and encoded in short BFP format or short
   DFP format, respectively.  The right half of \texttt{f0} is unspecified.
 \item Any integer type with \NBITS{} or fewer bits, including
-  \texttt{\_Bool}, as well as any \texttt{enum} type, is returned in
-  \texttt{r2}.  The return value is zero- or sign-extended to \NBITS{}
-  bits, as appropriate.
+  \texttt{\_BitInt(\(N\))} with \(N \le \NBITS{}\), \texttt{\_Bool}, as well as
+  any \texttt{enum} type, is returned in \texttt{r2}.  The return value is
+  zero- or sign-extended to \NBITS{} bits, as appropriate.
 \item A pointer to any type is returned in \texttt{r2}.
   \ifzseries\else
 \item A value of type \texttt{long} \texttt{long} or \texttt{unsigned}
@@ -1986,10 +2032,11 @@ caller, depending on the return value type:
 \item A vector of 16 or fewer bytes is returned left-aligned in
   \texttt{v24}.  The padding bits' values are unspecified.
 \item Any other type, such as \texttt{long} \texttt{double},
-  \texttt{\_Decimal128}, \texttt{\_\_int128}, a complex type, a structure,
-  a union, or a vector larger than 16 bytes, is returned in a return value
-  buffer allocated by the caller.  This buffer's address is treated like a
-  ``hidden argument'' and passed by the caller in \texttt{r2}.
+  \texttt{\_Decimal128}, \texttt{\_\_int128}, \texttt{\_BitInt(\(N\))}
+  with \(N > \NBITS{}\), a complex type, a structure, a union, or a vector
+  larger than 16 bytes, is returned in a return value buffer allocated by
+  the caller.  This buffer's address is treated like a ``hidden argument''
+  and passed by the caller in \texttt{r2}.
 \end{itemize}
 
 \section{Operating System Interface}
