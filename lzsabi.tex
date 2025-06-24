@@ -604,6 +604,12 @@ represent all of its enumeration constants and is not smaller than
 
 \begin{table}
   \centering
+  \index{\texttt{\_\_int128}}%
+  \index{\texttt{\_Bool}}%
+  \index{\texttt{\_Float16}}%
+  \index{\texttt{\_Decimal32}}%
+  \index{\texttt{\_Decimal64}}%
+  \index{\texttt{\_Decimal128}}%
   \begin{DIFnomarkup}
   \begin{threeparttable}
     \begin{tabularx}{\textwidth}{XlrrX}
@@ -648,7 +654,8 @@ represent all of its enumeration constants and is not smaller than
       & \textit{any-type}\texttt{ (*) ()} & \NBYTES{} & \NBYTES{} \\
       \midrule
       \multirow{3}{\hsize}{Binary floating-point} &
-      \texttt{float} & 4 & 4 & short BFP \\
+      \texttt{\_Float16}\tnote{\dagger\dagger} & 2 & 2 & tiny BFP \\
+      & \texttt{float} & 4 & 4 & short BFP \\
       & \texttt{double} & 8 & 8 & long BFP \\
       & \texttt{long double} & 16 & 8 & extended BFP \\
       \midrule
@@ -1807,6 +1814,7 @@ argument word.
   \item[\jumplabel{double\_or\_float}:] A double\_or\_float is
     one of the following:
     \begin{itemize}
+    \item A \texttt{\_Float16}.
     \item A \texttt{float} or \texttt{\_Decimal32}.
     \item A \texttt{double} or \texttt{\_Decimal64}.
     \item A structure equivalent to one of the above.  A structure is
@@ -1814,11 +1822,11 @@ argument word.
       which is either of type $T$ itself or a structure equivalent to
       type~$T$.
     \end{itemize}
-    If $\mbox{\texttt{fr}}>{\ifzseries 6\else 2\fi}$, that is, if there are no
-    more floating-point registers available for parameter passing, go to
-    \jumplabel{more}.  Otherwise, load the argument value into
-    floating-point register \texttt{fr}, set \texttt{fr} to
-    $\mbox{\texttt{fr}}+2$, and go to \jumplabel{scan}.
+    If $\mbox{\texttt{fr}}>{\ifzseries 6\else 2\fi}$, that is, if there
+    are no more floating-point registers available for parameter passing,
+    go to \jumplabel{more}.  Otherwise, load the argument value
+    left-aligned into floating-point register \texttt{fr}, set \texttt{fr}
+    to $\mbox{\texttt{fr}}+2$, and go to \jumplabel{scan}.
   \item[\jumplabel{vector\_arg}:] A vector\_arg has one of the following
     types:
     \begin{itemize}
@@ -1875,16 +1883,15 @@ argument word.
 \item[\jumplabel{more}:] The argument cannot be passed in registers; it
   will be passed in the parameter area of the caller's stack frame
   instead.  After having applied the replacement rules previously
-  explained as appropriate, the argument now has a size of {\ifzseries 8
-    bytes, except when its type is equivalent to \texttt{float} or
-    \texttt{\_Decimal32}, in which case it has 4 bytes.\else 4 or 8
-    bytes.\fi}%
+  explained as appropriate, the argument now has a size of 2, 4, or 8
+  bytes.
   \\
-  Copy the argument value {\ifzseries right-aligned into the 8-byte
-    parameter slot at the current stack position \texttt{starg}, leaving
-    the skipped bytes (if any) at unspecified values.\else to the current
-    stack position \texttt{starg}.\fi} Increment \texttt{starg} by
-  {\ifzseries 8\else the argument size\fi}, then go to \jumplabel{scan}.
+  Copy the argument value right-aligned into the \NBYTES{}-byte parameter
+  slot at the current stack position \texttt{starg}, leaving the skipped
+  bytes (if any) at unspecified values.  Increment \texttt{starg} by
+  \NBYTES{}, then go to \jumplabel{scan}.
+  \ifzseries\else Or if the argument has 8 bytes, copy it to the next two
+    parameter slots and increment \texttt{starg} by 8 instead.\fi
 \item[\jumplabel{more\_vec}:] The argument cannot be passed in vector
   registers, but will be passed in the parameter area.  Copy its value to
   the current stack position \texttt{starg}, increment \texttt{starg} by
@@ -2020,6 +2027,9 @@ caller, depending on the return value type:
 \item A value of type \texttt{float} or \texttt{\_Decimal32} is returned
   in the left half of \texttt{f0} and encoded in short BFP format or short
   DFP format, respectively.  The right half of \texttt{f0} is unspecified.
+\item A value of type \texttt{\_Float16} is returned in the leftmost two
+  bytes of \texttt{f0} and encoded in tiny BFP format.  The remaining
+  bytes of \texttt{f0} are unspecified.
 \item Any integer type with \NBITS{} or fewer bits, including
   \texttt{\_BitInt(\(N\))} with \(N \le \NBITS{}\), \texttt{\_Bool}, as well as
   any \texttt{enum} type, is returned in \texttt{r2}.  The return value is
