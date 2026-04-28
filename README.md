@@ -4,10 +4,18 @@
 
 This repository contains the LaTeX source for the s390x ELF ABI document.
 
-## Usage
+## Documentation
 
-For advertised versions of the s390x ELF ABI specification, see the
-project's ["Releases"][releases] section.
+The s390x ELF ABI specification is available online at:
+
+**https://ibm.github.io/s390x-abi/**
+
+You can download the current PDF version directly from the website.
+
+For advertised versions and release history, see the project's
+["Releases"][releases] section.
+
+## Usage
 
 In order to build the PDF yourself from source, you need:
 
