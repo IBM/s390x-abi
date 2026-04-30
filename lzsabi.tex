@@ -683,18 +683,18 @@ represent all of its enumeration constants and is not smaller than
   \label{tab:scalar}
 \end{table}
 
-\subsubsection{Bit-Precise Integers \texttt{\_BitInt(\(N\))}}
+\subsubsection{Bit-Precise Integers \texttt{\_BitInt($N$)}}
 \index{N-bit integer}%
 \index{\texttt{\_BitInt}}%
 \index{bit-precise integer}%
-For an integer constant \(N\) the bit-precise signed \(N\)-bit integer
-type \texttt{\_BitInt(\(N\))} and its unsigned counterpart
-\texttt{unsigned \_BitInt(\(N\))} are represented as follows:
+For an integer constant $N$ the bit-precise signed $N$-bit integer
+type \texttt{\_BitInt($N$)} and its unsigned counterpart
+\texttt{unsigned \_BitInt($N$)} are represented as follows:
 \begin{itemize}
-\item If \(N \le \NBITS{}\): like the smallest appropriately-signed
+\item If $N \le \NBITS{}$: like the smallest appropriately-signed
   fundamental integer type that covers its value range.  Thus the size and
   alignment is 1, 2, {\ifzseries 4, or 8\else or 4\fi} bytes.
-\item If \(N > \NBITS{}\): like a struct of \texttt{long} or
+\item If $N > \NBITS{}$: like a struct of \texttt{long} or
   \texttt{unsigned long} fields, using the smallest number of fields that
   can contain the type.  The fields are ordered from most to least
   significant, and the least significant bit is stored in the least
@@ -710,7 +710,7 @@ type.  Excess bits use sign or zero extension, as appropriate.
   \begin{DIFnomarkup}
   \begin{tabular}[t]{c@{\,\ldots\,}ccc}
     \toprule
-    \multicolumn{2}{c}{\(N\)} & Size & Alignment \\
+    \multicolumn{2}{c}{$N$} & Size & Alignment \\
     \midrule
      1 &   8 &  1 & 1 \\
      9 &  16 &  2 & 2 \\
@@ -718,14 +718,14 @@ type.  Excess bits use sign or zero extension, as appropriate.
     \ifzseries
     33 &  64 &  8 & 8 \\
     \fi
-    \multicolumn{2}{c}{\(>\NBITS{}\)}
-                              & \(\NBYTES{}\cdot\left\lceil\frac{N}{\NBITS{}}\right\rceil\)
-                                     & \NBYTES{} \\
+    \multicolumn{2}{c}{$>\NBITS{}$}
+                            & $\NBYTES{}\cdot\left\lceil\frac{N}{\NBITS{}}\right\rceil$
+                                   & \NBYTES{} \\
     \bottomrule
   \end{tabular}
   \end{DIFnomarkup}
   \caption[Bit-Precise Integer Types] {Bit-Precise Integer Types
-    \texttt{\_BitInt(\(N\))} and \texttt{unsigned \_BitInt(\(N\))}}
+    \texttt{\_BitInt($N$)} and \texttt{unsigned \_BitInt($N$)}}
   \label{tab:bitint}
 \end{table}
 
@@ -1861,7 +1861,7 @@ argument word.
     \item One of the simple integer types no more than \NBITS{} bits wide.
       This includes \texttt{signed} \texttt{char}, \texttt{short},
       \texttt{int}, \texttt{long}, \ifzseries \texttt{long} \texttt{long},
-      \fi \texttt{\_BitInt(\(N\))} with \(N \le \NBITS{}\), their unsigned
+      \fi \texttt{\_BitInt($N$)} with $N \le \NBITS{}$, their unsigned
       counterparts, \texttt{\_Bool}, and any \texttt{enum} type.  If such
       an argument is shorter than \NBITS{} bits, replace it by a full
       \NBITS{}-bit integer representing the same number, using sign or
@@ -2036,7 +2036,7 @@ caller, depending on the return value type:
   bytes of \texttt{f0} and encoded in tiny BFP format.  The remaining
   bytes of \texttt{f0} are unspecified.
 \item Any integer type with \NBITS{} or fewer bits, including
-  \texttt{\_BitInt(\(N\))} with \(N \le \NBITS{}\), \texttt{\_Bool}, as well as
+  \texttt{\_BitInt($N$)} with $N \le \NBITS{}$, \texttt{\_Bool}, as well as
   any \texttt{enum} type, is returned in \texttt{r2}.  The return value is
   zero- or sign-extended to \NBITS{} bits, as appropriate.
 \item A pointer to any type is returned in \texttt{r2}.
@@ -2047,8 +2047,8 @@ caller, depending on the return value type:
 \item A vector of 16 or fewer bytes is returned left-aligned in
   \texttt{v24}.  The padding bits' values are unspecified.
 \item Any other type, such as \texttt{long} \texttt{double},
-  \texttt{\_Decimal128}, \texttt{\_\_int128}, \texttt{\_BitInt(\(N\))}
-  with \(N > \NBITS{}\), a complex type, a structure, a union, or a vector
+  \texttt{\_Decimal128}, \texttt{\_\_int128}, \texttt{\_BitInt($N$)}
+  with $N > \NBITS{}$, a complex type, a structure, a union, or a vector
   larger than 16 bytes, is returned in a return value buffer allocated by
   the caller.  This buffer's address is treated like a ``hidden argument''
   and passed by the caller in \texttt{r2}.
@@ -4038,15 +4038,15 @@ defined by the byte piece operation \texttt{DW\_OP\_piece} or the bit
 piece operation \texttt{DW\_OP\_bit\_piece}, the following applies:
 \begin{itemize}
 \item Pieces of a floating-point or vector register are taken from the
-  left.  This means that a bit piece with offset \(t\) and size \(n\)
-  consists of the register's bits numbered from \(t\) to \(t+n-1\),
+  left.  This means that a bit piece with offset $t$ and size $n$
+  consists of the register's bits numbered from $t$ to $t+n-1$,
   according to big-endian bit numbering.  And a byte piece of a
-  floating-point or vector register of size \(n\) consists of the
-  register's \(n\) leftmost bytes.
+  floating-point or vector register of size $n$ consists of the
+  register's $n$ leftmost bytes.
 \item For any other register, pieces are taken from the right.  This means
-  that a bit piece with offset \(t\) and size \(n\) consists of the bits
-  numbered from \(w-t-n\) to \(w-t-1\), where \(w\) is the register's bit
-  width.  And a byte piece of size \(n\) consists of the register's \(n\)
+  that a bit piece with offset $t$ and size $n$ consists of the bits
+  numbered from $w-t-n$ to $w-t-1$, where $w$ is the register's bit
+  width.  And a byte piece of size $n$ consists of the register's $n$
   rightmost bytes.
 \end{itemize}
 
