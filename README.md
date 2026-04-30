@@ -20,8 +20,8 @@ For advertised versions and release history, see the project's
 In order to build the PDF yourself from source, you need:
 
 * a full TeX installation (such as [TeX Live][texlive])
-  * including latexmk, LuaTeX, the "TeX Gyre DejaVu Math" font, and the
-    various LaTeX packages used by the document
+  * including latexmk, LuaTeX, and the various LaTeX packages used by the
+    document
 * the [IBM Plex][plex] fonts
 * GNU Make
 
@@ -30,6 +30,13 @@ Then just typing
     $ make
 
 should generate `lzsabi_s390x.pdf`.
+
+It is also possible to build the 32-bit s390 ELF ABI from the same
+sources.  The target is called `lzsabi_s390.pdf`.  To build both, use
+
+    $ make all-pdf
+
+However, note that this is not maintained as actively as the 64-bit ABI.
 
 Experimental support for other targets exists, such as for HTML output via
 [TeX4ht][tex4ht], and for plain text with [ELinks][elinks].  See the
