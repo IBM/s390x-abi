@@ -1340,6 +1340,18 @@ code \texttt{cc}, a 4-bit \index{program mask}program mask \texttt{pm},
 and a 32-bit \index{FPC}floating-point control register \texttt{fpc}.
 
 \subsubsection{Register Preservation Rules}
+\Cref{tab:regsacrosscall} summarizes the roles of registers and their
+persistence\index{registers!across function call} across function calls.
+Registers marked as ``saved'' are also referred to as
+``nonvolatile''\index{nonvolatile}; they ``belong'' to the calling
+function and must retain their values over the function call.  A called
+function modifying these registers must restore their original values
+before returning.  By contrast, ``volatile''\index{volatile} registers
+need not be restored.  To preserve such a register's value across the
+function call, the caller must take care of saving and restoring the value
+by itself.  ``Reserved'' registers are reserved for system use and must
+not be modified at all.
+
 \begin{table}
   \centering
   \begin{DIFnomarkup}
@@ -1407,18 +1419,6 @@ and a 32-bit \index{FPC}floating-point control register \texttt{fpc}.
   \caption{Register usage across function calls}
   \label{tab:regsacrosscall}
 \end{table}
-
-\Cref{tab:regsacrosscall} summarizes the roles of registers and their
-persistence\index{registers!across function call} across function calls.
-Registers marked as ``saved'' are also referred to as
-``nonvolatile''\index{nonvolatile}; they ``belong'' to the calling
-function and must retain their values over the function call.  A called
-function modifying these registers must restore their original values
-before returning.  By contrast, ``volatile''\index{volatile} registers
-need not be restored.  To preserve such a register's value across the
-function call, the caller must take care of saving and restoring the value
-by itself.  ``Reserved'' registers are reserved for system use and must
-not be modified at all.
 
 Using these definitions, the registers are categorized as follows:
 \begin{itemize}
@@ -1724,7 +1724,6 @@ passing:\index{registers!parameter passing}
   (volatile)
 \item Vector registers \texttt{v24} to \texttt{v31} (volatile)
 \end{itemize}
-
 If needed, more arguments are passed in the parameter area, which starts
 \STACKSIZE{} bytes above the stack pointer (see \cref{fig:prmarea}).
 
@@ -2576,54 +2575,6 @@ member, as shown in \cref{tab:auxtypes}.
   \label{tab:auxtypes}
 \end{table}
 
-\begin{table}
-  \centering
-  \begin{DIFnomarkup}
-  \begin{tabularx}{\textwidth}{lr>{\raggedright\arraybackslash}X}
-    \toprule
-    Name & Value & Description \\
-    \midrule
-    \texttt{HWCAP\_S390\_ZARCH} & \texttt{0x2}
-    & Running in z/Architecture mode \\
-    \texttt{HWCAP\_S390\_STFLE} & \texttt{0x4}
-    & Store-facility-list-extended facility installed \\
-    \texttt{HWCAP\_S390\_MSA} & \texttt{0x8}
-    & Message-security assist available \\
-    \texttt{HWCAP\_S390\_LDISP} & \texttt{0x10}
-    & Long-displacement facility installed \\
-    \texttt{HWCAP\_S390\_EIMM} & \texttt{0x20}
-    & Extended-immediate facility installed \\
-    \texttt{HWCAP\_S390\_DFP} & \texttt{0x40}
-    & Decimal floating-point facility and perform floating-point
-    facility (PFPO) installed \\
-    \texttt{HWCAP\_S390\_HPAGE} & \texttt{0x80}
-    & Huge page support available \\
-    \texttt{HWCAP\_S390\_ETF3EH} & \texttt{0x100}
-    & Extended-translation facility 3 and ETF3-enhancement
-    facility installed \\
-    \texttt{HWCAP\_S390\_TE} & \texttt{0x400}
-    & Transactional-execution facility installed \\
-    \texttt{HWCAP\_S390\_VXRS} & \texttt{0x0800}
-    & Vector facility installed \\
-    \texttt{HWCAP\_S390\_VXRS\_BCD} & \texttt{0x1000}
-    & Vector packed-decimal facility installed \\
-    \texttt{HWCAP\_S390\_VXRS\_EXT} & \texttt{0x2000}
-    & Vector-enhancements facility 1 installed \\
-    \texttt{HWCAP\_S390\_GS} & \texttt{0x4000}
-    & Guarded-storage facility installed \\
-    \texttt{HWCAP\_S390\_VXRS\_EXT2} & \texttt{0x8000}
-    & Vector-enhancements facility 2 installed \\
-    \texttt{HWCAP\_S390\_VXRS\_PDE} & \texttt{0x10000}
-    & Vector-packed-decimal enhancement facility installed \\
-    \texttt{HWCAP\_S390\_DFLT} & \texttt{0x40000}
-    & Deflate-conversion facility installed \\
-    \bottomrule
-  \end{tabularx}
-  \end{DIFnomarkup}
-  \caption{Hardware capabilities}
-  \label{tab:hwcap}
-\end{table}
-
 \texttt{a\_type} auxiliary vector types are described in the
 following:
 \begin{description}
@@ -2699,6 +2650,54 @@ following:
   (DSO), specifically its ELF header, is mapped in the program's virtual
   address space.
 \end{description}
+
+\begin{table}
+  \centering
+  \begin{DIFnomarkup}
+  \begin{tabularx}{\textwidth}{lr>{\raggedright\arraybackslash}X}
+    \toprule
+    Name & Value & Description \\
+    \midrule
+    \texttt{HWCAP\_S390\_ZARCH} & \texttt{0x2}
+    & Running in z/Architecture mode \\
+    \texttt{HWCAP\_S390\_STFLE} & \texttt{0x4}
+    & Store-facility-list-extended facility installed \\
+    \texttt{HWCAP\_S390\_MSA} & \texttt{0x8}
+    & Message-security assist available \\
+    \texttt{HWCAP\_S390\_LDISP} & \texttt{0x10}
+    & Long-displacement facility installed \\
+    \texttt{HWCAP\_S390\_EIMM} & \texttt{0x20}
+    & Extended-immediate facility installed \\
+    \texttt{HWCAP\_S390\_DFP} & \texttt{0x40}
+    & Decimal floating-point facility and perform floating-point
+    facility (PFPO) installed \\
+    \texttt{HWCAP\_S390\_HPAGE} & \texttt{0x80}
+    & Huge page support available \\
+    \texttt{HWCAP\_S390\_ETF3EH} & \texttt{0x100}
+    & Extended-translation facility 3 and ETF3-enhancement
+    facility installed \\
+    \texttt{HWCAP\_S390\_TE} & \texttt{0x400}
+    & Transactional-execution facility installed \\
+    \texttt{HWCAP\_S390\_VXRS} & \texttt{0x0800}
+    & Vector facility installed \\
+    \texttt{HWCAP\_S390\_VXRS\_BCD} & \texttt{0x1000}
+    & Vector packed-decimal facility installed \\
+    \texttt{HWCAP\_S390\_VXRS\_EXT} & \texttt{0x2000}
+    & Vector-enhancements facility 1 installed \\
+    \texttt{HWCAP\_S390\_GS} & \texttt{0x4000}
+    & Guarded-storage facility installed \\
+    \texttt{HWCAP\_S390\_VXRS\_EXT2} & \texttt{0x8000}
+    & Vector-enhancements facility 2 installed \\
+    \texttt{HWCAP\_S390\_VXRS\_PDE} & \texttt{0x10000}
+    & Vector-packed-decimal enhancement facility installed \\
+    \texttt{HWCAP\_S390\_DFLT} & \texttt{0x40000}
+    & Deflate-conversion facility installed \\
+    \bottomrule
+  \end{tabularx}
+  \end{DIFnomarkup}
+  \caption{Hardware capabilities}
+  \label{tab:hwcap}
+\end{table}
 
 Other auxiliary vector types are reserved.  No flags are currently
 defined for \texttt{AT\_FLAGS} on \ABINAME{}.
