@@ -1,4 +1,4 @@
-% © Copyright IBM Corporation 2001, 2025
+% © Copyright IBM Corporation 2001, 2026
 % © Copyright Linux Foundation 2002
 %
 % SPDX-License-Identifier: GFDL-1.1-no-invariants-only
@@ -10,7 +10,19 @@
 % no Invariant Sections, with no Front-Cover Texts, and with no Back-Cover
 % Texts.
 
-\documentclass[english,11pt,twoside,toc=bib,toc=idx]{scrreprt}
+\documentclass[USenglish,fontsize=11pt,twoside,%
+  toc=bib,toc=idx,toc=graduated,numbers=noendperiod,
+  % -- Hyperref --
+  bookmarks=true,
+  bookmarksnumbered=true,
+  bookmarksopen=true,
+  bookmarksopenlevel=1,
+  breaklinks=true,
+  colorlinks=true,
+  linkcolor=black,
+  pdfpagelayout={TwoPageRight},
+  pdfusetitle=true
+]{scrreprt}
 \usepackage{scrhack}
 
 % --- Version ---
@@ -21,13 +33,12 @@
 
 \usepackage{babel}
 \usepackage{graphicx}
-\usepackage{array}
-\usepackage{tabularx}
+\usepackage{ltablex}
 \usepackage{multirow}
 \usepackage{threeparttable}
-\usepackage{longtable}
 \usepackage{booktabs}
 \usepackage{makeidx}
+\usepackage{bookmark}
 
 % --- Indexing ---
 
@@ -64,19 +75,21 @@
 
 % --- Layout definitions ---
 
-\KOMAoptions{paper=letter}
-\KOMAoptions{DIV=13,BCOR=1cm}
-
-\setlength{\parskip}{\smallskipamount}
-\setlength{\parindent}{0pt}
+\keepXColumns  % for ltablex
 \setcounter{secnumdepth}{3}
 \setcounter{tocdepth}{3}
-\DeclareTOCStyleEntry[numwidth=2em]{default}{chapter}
-\DeclareTOCStyleEntry[indent=2em,numwidth=3em]{default}{section}
-\DeclareTOCStyleEntry[indent=5em,numwidth=3.5em]{default}{subsection}
-\DeclareTOCStyleEntry[indent=8.5em,numwidth=4em]{default}{subsubsection}
-\DeclareTOCStyleEntry[numwidth=3em]{default}{figure}
-\DeclareTOCStyleEntry[numwidth=3em]{default}{table}
+
+\KOMAoptions{
+  paper=letter,
+  DIV=13,BCOR=1cm,
+  % If you prefer inter-paragraph spacing instead of indentation:
+  %
+  % parskip=half
+}
+
+\DeclareTOCStyleEntry[numwidth=3.2em]{default}{figure}
+\DeclareTOCStyleEntry[numwidth:=figure]{default}{table}
+\DeclareTOCStyleEntry[level=0,indent=0pt,numwidth:=figure]{default}{lstlisting}
 
 % --- Custom commands ---
 
@@ -136,15 +149,7 @@
   comment=[l]\#,
   string=[b]{"}}
 
-% --- Hyperref ---
-
-\usepackage[unicode=true,pdfusetitle,
-bookmarks=true,bookmarksnumbered=true,bookmarksopen=true,bookmarksopenlevel=1,
-breaklinks=true,pdfborder={0 0 0},backref=false,colorlinks=true]
-{hyperref}
-\hypersetup{linkcolor=black,pdfstartview={XYZ 0 0 1}}
-
-\usepackage{cleveref}
+\usepackage[noabbrev]{cleveref}
 
 % Fixed definition of \refstepcounter@noarg from cleveref.sty.  This
 % version fixes an endless loop with tex4ht when used together with
@@ -161,11 +166,6 @@ breaklinks=true,pdfborder={0 0 0},backref=false,colorlinks=true]
     [\@tempa][\arabic{#1}][\cref@result]%
     \csname p@#1\endcsname\csname the#1\endcsname}}%
 \makeatother
-
-% Call out figures with "figure" instead of "fig.".
-
-\crefname{figure}{figure}{figures}
-\Crefname{figure}{Figure}{Figures}
 
 % --- TikZ support ---
 
@@ -319,7 +319,7 @@ breaklinks=true,pdfborder={0 0 0},backref=false,colorlinks=true]
 
   \noindent Version \Version
 
-  \noindent © Copyright IBM Corporation 2001, 2025
+  \noindent © Copyright IBM Corporation 2001, 2026
 
   \noindent © Copyright Linux Foundation 2002
 
@@ -336,6 +336,7 @@ breaklinks=true,pdfborder={0 0 0},backref=false,colorlinks=true]
 \tableofcontents
 \listoffigures
 \listoftables
+\newcommand*{\listoflolname}{List of Listings}
 \lstlistoflistings
 
 \chapter*{About This Book}
