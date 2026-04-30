@@ -635,7 +635,7 @@ represent all of its enumeration constants and is not smaller than
       & \texttt{unsigned int} & 4 & 4 \\
       & \texttt{unsigned long} & \NBYTES{} & \NBYTES{} \\
       & \texttt{unsigned long long} & 8 & 8 \\
-      & \texttt{unsigned \_\_int128}\tnote{\dagger\dagger} & 16 & 8 \\
+      & \texttt{unsigned \_\_int128}\tnote{\ddagger} & 16 & 8 \\
       \midrule
       \multirow{12}{\hsize}{Signed integer}
       & \texttt{signed char} & 1 & 1
@@ -650,8 +650,8 @@ represent all of its enumeration constants and is not smaller than
       & \texttt{long} & \NBYTES{} & \NBYTES{} \\
       & \texttt{signed long long} & 8 & 8 \\
       & \texttt{long long} & 8 & 8 \\
-      & \texttt{\_\_int128}\tnote{\dagger\dagger} & 16 & 8 \\
-      & \texttt{signed \_\_int128}\tnote{\dagger\dagger} & 16 & 8 \\
+      & \texttt{\_\_int128}\tnote{\ddagger} & 16 & 8 \\
+      & \texttt{signed \_\_int128}\tnote{\ddagger} & 16 & 8 \\
       \midrule
       \multirow{2}{\hsize}{Pointer}
       & \textit{any-type}\texttt{ *} & \NBYTES{} & \NBYTES{}
@@ -659,22 +659,22 @@ represent all of its enumeration constants and is not smaller than
       & \textit{any-type}\texttt{ (*) ()} & \NBYTES{} & \NBYTES{} \\
       \midrule
       \multirow{3}{\hsize}{Binary floating-point} &
-      \texttt{\_Float16}\tnote{\dagger\dagger} & 2 & 2 & tiny BFP \\
+      \texttt{\_Float16}\tnote{\ddagger} & 2 & 2 & tiny BFP \\
       & \texttt{float} & 4 & 4 & short BFP \\
       & \texttt{double} & 8 & 8 & long BFP \\
       & \texttt{long double} & 16 & 8 & extended BFP \\
       \midrule
       \multirow{3}{\hsize}{Decimal floating-point} &
-      \texttt{\_Decimal32}\tnote{\dagger\dagger} & 4 & 4 & short DFP \\
-      & \texttt{\_Decimal64}\tnote{\dagger\dagger} & 8 & 8 & long DFP \\
-      & \texttt{\_Decimal128}\tnote{\dagger\dagger} & 16 & 8 & extended DFP \\
+      \texttt{\_Decimal32}\tnote{\ddagger} & 4 & 4 & short DFP \\
+      & \texttt{\_Decimal64}\tnote{\ddagger} & 8 & 8 & long DFP \\
+      & \texttt{\_Decimal128}\tnote{\ddagger} & 16 & 8 & extended DFP \\
       \bottomrule
     \end{tabularx}
     \medskip
     \begin{tablenotes}
     \item [\dagger] Here $n$ denotes the bit size, which equals the byte
       size multiplied by 8.
-    \item [\dagger\dagger] These types are an extension to C (ISO/IEC
+    \item [\ddagger] These types are an extension to C (ISO/IEC
       9899:2011).
     \end{tablenotes}
   \end{threeparttable}
@@ -1367,7 +1367,7 @@ and a 32-bit \index{FPC}floating-point control register \texttt{fpc}.
       \texttt{f8}…\texttt{f15} & -- & Saved \\
       \texttt{v0}…\texttt{v7} & (Extend \texttt{f0}…\texttt{f7}) & Volatile \\
       \texttt{v8}…\texttt{v15} & (Extend \texttt{f8}…\texttt{f15}) &
-      Volatile\tnote{\dagger\dagger} \\
+      Volatile\tnote{\ddagger} \\
       \else %---------------------------------------------
       \texttt{f2} & Argument & Volatile \\
       \texttt{f4}, \texttt{f6} & -- & Saved \\
@@ -1376,7 +1376,7 @@ and a 32-bit \index{FPC}floating-point control register \texttt{fpc}.
       \texttt{v0}…\texttt{v3}, \texttt{v5}, \texttt{v7}…\texttt{v15} &
       (Extend respective FP registers) & Volatile \\
       \texttt{v4}, \texttt{v6} & (Extend \texttt{f4}, \texttt{f6}) &
-      Volatile\tnote{\dagger\dagger} \\
+      Volatile\tnote{\ddagger} \\
       \fi %-----------------------------------------------
       \texttt{v16}…\texttt{v23} & -- & Volatile \\
       \texttt{v24} & Argument / return value & Volatile \\
@@ -1398,7 +1398,7 @@ and a 32-bit \index{FPC}floating-point control register \texttt{fpc}.
       function.
     \item Reserved: These registers must not be modified by
       ABI-compliant functions.
-    \item [\dagger\dagger] Except for bytes 0--7, which are aliased to
+    \item [\ddagger] Except for bytes 0--7, which are aliased to
       {\ifzseries \texttt{f8}…\texttt{f15}\else \texttt{f4},
         \texttt{f6}\fi}.
     \end{tablenotes}
