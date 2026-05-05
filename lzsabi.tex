@@ -4417,19 +4417,29 @@ types in \cref{tab:relocations}:
 \end{itemize}
 
 \begin{DIFnomarkup}
+\ifdefined\ifHtml
+  \begin{table}
+    \centering
+    \caption{Relocation types\label{tab:relocations}}
+  \end{table}
+\fi
 \begin{longtable}{lrll}
-  \caption{Relocation types\label{tab:relocations}}\\[\medskipamount]
+  \ifdefined\ifHtml\else
+    \caption{Relocation types\label{tab:relocations}}\\[\medskipamount]
+  \fi
   \toprule
   Name & Value & Field & Calculation \\
   \midrule
   \endfirsthead
-  \caption[]{Relocation types \emph{-- continued}}\\[\medskipamount]
   \toprule
   Name & Value & Field & Calculation \\
   \midrule
   \endhead
-  \bottomrule
+  \midrule
+  \multicolumn{4}{r}{\emph{Continued on next page}}\\
   \endfoot
+  \bottomrule
+  \endlastfoot
   \texttt{R\_390\_NONE} & 0 & \emph{none} & \emph{none} \\
   \texttt{R\_390\_8} & 1 & \texttt{byte8} & $S + A$ \\
   \texttt{R\_390\_12} & 2 & \texttt{low12} & $S + A$ \\
